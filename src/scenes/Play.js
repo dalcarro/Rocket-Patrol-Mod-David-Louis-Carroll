@@ -1,6 +1,6 @@
-class Menu extends Phaser.Scene{
+class Play extends Phaser.Scene{
     constructor(){
-        super("menuScene");
+        super("playScene");
     }
 //modifying prexisting phaser stuff. needs to be exact name and order.
     init(){

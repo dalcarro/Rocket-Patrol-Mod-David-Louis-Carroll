@@ -1,10 +1,10 @@
-//http://localhost:8000/
+//*http://localhost:8000*//
 console.log("hello World!");
 config = {
-    type: Phaser.CANVAS,
+    type: Phaser.Canvas,
     width: 640,
     height: 480,
-    scene: [Menu,Play],
+    scene: [ Menu , Play ],
 
 
 }
