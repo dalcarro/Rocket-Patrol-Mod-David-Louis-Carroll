@@ -15,9 +15,29 @@ class Play extends Phaser.Scene{
         this.load.image("botAtop", "./assets/botAtop.png");
         //load spritesheet
         this.load.spritesheet('explosion','./assets/explosion.png',{frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9});
+        this.load.atlas('pyr','./assets/spritesheet.png','./assets/sprites.json');
     }
 
     create(){
+        //animation config
+        this.anims.create({
+            key: 'explode', 
+            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end:9, first:0}), 
+            frameRate: 30
+        });
+        this.anims.create({
+            key: 'fly', 
+            frames: this.anims.generateFrameNames('pyr', {  
+            prefix: 'Pyramid',
+            start: 0,
+            end: 7,
+            suffix: '',
+            zeroPad: 4,
+            }),
+            frameRate: 5,
+            repeat: -1,
+        });
+
         let musConig = {
             mute: false,
             volume: 1,
@@ -32,9 +52,9 @@ class Play extends Phaser.Scene{
         //place tile sprite big
         this.starfield = this.add.tileSprite(0, 0, 640,480, 'altSpace').setOrigin(0,0);
         //ship declarations
-        this.ship01 = new Spaceship(this, game.config.width + 192, 132, 'spaceship',0,30).setOrigin(0,0);
-        this.ship02 = new Spaceship(this, game.config.width + 96, 196, 'spaceship',0,30).setOrigin(0,0);
-        this.ship03 = new Spaceship(this, game.config.width, 260, 'spaceship',0,30).setOrigin(0,0);
+        this.ship01 = new Spaceship(this, game.config.width + 192, 132, 'pyr','Pyramid0001',30).setOrigin(0,0).anims.play('fly');
+        this.ship02 = new Spaceship(this, game.config.width + 96, 196, 'pyr','Pyramid0001',30).setOrigin(0,0).anims.play('fly');
+        this.ship03 = new Spaceship(this, game.config.width, 260, 'pyr','Pyramid0001',30).setOrigin(0,0).anims.play('fly');
         //white rectangle Rectangle(x, y, width, height);
             //top
         this.add.tileSprite(0, 0, 640, 32, "botAtop").setOrigin(0,0);
@@ -45,22 +65,17 @@ class Play extends Phaser.Scene{
             //right
         this.add.tileSprite(608, 0, 32, 457, "left_and_right").setOrigin(0,0);
         //green UI background
-        this.add.tileSprite(37, 42, 566, 64, 0x00FF00).setOrigin(0,0);
+        this.add.rectangle(37, 42, 566, 64, 0x00FF00).setOrigin(0,0);
         //add rocket(p1)
-        this.p1Rocket = new Rocket(this, game.config.width/2,431,'rocket',0).setScale(0.5,0.5).setOrigin(0,0);
+        this.p1Rocket = new Rocket(this, game.config.width/2,431,'rocket',0).setScale(1.5,1.5).setOrigin(0,0);
         //define Keys
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-        //animation config
-        this.anims.create({
-            key: 'explode', 
-            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end:9, first:0}), 
-            frameRate: 30
-        });
+        
         //score
         this.p1Score = 0;
-        
+        this.speedUpSwitch = false;
         //score display
         let scoreConfig = {
             fontFamily: 'Courier',
@@ -76,29 +91,24 @@ class Play extends Phaser.Scene{
         }
         this.scoreLeft = this.add.text(69,54, this.p1Score, scoreConfig);
         
-        this.tempTime = game.settings.gameTimer/1000;
-        
         //game over flag
         this.gameOver = false;
         //60-second play clock
         scoreConfig.fixedWidth = 0;
-        this.clock = this.time.delayedCall(60000, () => {
+        this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
             this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER',
         scoreConfig).setOrigin(0.5);
             this.add.text(game.config.width/2, game.config.height/2 + 64, '(F)ire to Restart or left arrow for menu', 
         scoreConfig).setOrigin(0.5);
             this.gameOver = true;
         },null,this);
-        this.timerUi = this.add.text(455,54, this.tempTime - this.clock.getElapsedSeconds(), scoreConfig);
+        this.timerUi = this.add.text(455,54, ((game.settings.gameTimer/1000) - this.clock.getElapsedSeconds()), scoreConfig);
     }
     update(){
-        this.timerUi.text = this.tempTime - Math.round(this.clock.getElapsedSeconds());
-        // if(this.gameOver && this.scoreLeft >= score){
-        //     score = this.scoreLeft
-        //    this.highScore = this.add.text(138,54, score, scoreConfig);
-        // }
-        if(this.clock == game.settings.gameTimer/2){
+        this.timerUi.text = (game.settings.gameTimer/1000) - Math.round(this.clock.getElapsedSeconds());
+        if( Math.round(this.clock.getElapsedSeconds()) >= 30 && this.speedUpSwitch == false){
             game.settings.spaceshipSpeed *= 2;
+            this.speedUpSwitch = true;
             console.log("Speed increased");
         }
         if(this.backSwitch == false && !this.gameOver){
@@ -106,6 +116,7 @@ class Play extends Phaser.Scene{
             this.backSwitch = true;
         }
         if(this.gameOver == true){
+            this.speedUpSwitch = false;
             this.music.pause();
             this.backSwitch = false;
         }
@@ -113,7 +124,7 @@ class Play extends Phaser.Scene{
             this.scene.restart(this.p1Score);
         }
         //scroll tile sprite
-        this.starfield.tilePositionX -= 4;
+        this.starfield.tilePositionX -= 1;
         if(!this.gameOver){
             //update rocket
             this.p1Rocket.update();
